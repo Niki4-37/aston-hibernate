@@ -1,0 +1,67 @@
+# ------------------------------------------------------------------
+# 1️⃣ Java – Maven & Gradle build artefacts
+# ------------------------------------------------------------------
+/target/
+/build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven specific
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Gradle specific
+.gradle
+gradle-app.setting
+gradle-wrapper.jar
+gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar   # keep the wrapper jar if you want to ship it
+
+# ------------------------------------------------------------------
+# 2️⃣ IntelliJ IDEA – project files & caches
+# ------------------------------------------------------------------
+.idea/
+*.iws
+*.iml
+out/
+
+# IntelliJ local history (optional, but usually useful)
+.idea/libraries
+.idea/modules.xml
+.idea/tasks.xml
+.idea/dictionaries
+
+# ------------------------------------------------------------------
+# 3️⃣ Visual Studio Code – user settings, extensions cache
+# ------------------------------------------------------------------
+.vscode/
+.history/
+
+# VS Code remote containers & devcontainers (if used)
+.devcontainer/
+
+# ------------------------------------------------------------------
+# 4️⃣ Miscellaneous / OS specific files
+# ------------------------------------------------------------------
+# macOS Finder attributes
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Linux desktop environment caches
+ehthumbs.db
+
+# ------------------------------------------------------------------
+# 5️⃣ IDE‑agnostic build & dependency folders
+# ------------------------------------------------------------------
+/bin/
+/lib/
+*.log
+*.tmp
+*.bak
