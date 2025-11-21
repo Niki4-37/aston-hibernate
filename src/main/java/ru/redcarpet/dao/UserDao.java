@@ -18,4 +18,45 @@ public class UserDao {
             e.printStackTrace();
         }
     }
+
+    public User findById(Long id) {
+        User user = null;
+        try (var session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+
+            user = session.get(User.class, id);
+
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public User delete(Long id) {
+        User user = null;
+        try (var session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+
+            user = session.get(User.class, id);
+            session.remove(user);
+
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public void update(User user) {
+        try (var session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+
+            session.merge(user);
+
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            e.printStackTrace();
+        }
+    }
 }

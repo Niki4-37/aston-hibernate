@@ -12,5 +12,9 @@ public class HibernateRunner {
         var newUser = new User(null, "Ivan", "Ivan@mail.ru", LocalDate.of(2001, 04, 11), LocalDate.now());
         userDao.create(newUser);
 
+        //newUser = userDao.findById(2L);
+        newUser.setEmail("Ben@gmail.com");
+        userDao.update(newUser);
+
     }
 }
