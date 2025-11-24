@@ -1,62 +1,101 @@
 package ru.redcarpet.dao;
 
 import org.hibernate.HibernateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.entity.User;
+import ru.redcarpet.exception.AppException;
+import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.HibernateUtil;
 
 public class UserDao {
 
-    public void create(User user) {
-        try (var session = HibernateUtil.openSession()) {
-            session.beginTransaction();
+    private final UserMapper MAPPER;
+    private static final Logger LOG = LoggerFactory.getLogger(UserDao.class);
 
-            session.persist(user);
-
-            session.getTransaction().commit();
-        } catch (HibernateException e) {
-            e.printStackTrace();
-        }
+    public UserDao(UserMapper mapper) {
+        this.MAPPER = mapper;
     }
 
-    public User findById(Long id) {
-        User user = null;
+    public UserDto create(UserDto userDto) {
+        if (userDto.id() != null) {
+            throw new AppException("ID should be null");
+        }
         try (var session = HibernateUtil.openSession()) {
             session.beginTransaction();
 
-            user = session.get(User.class, id);
+            session.persist(MAPPER.toEntity(userDto));
 
             session.getTransaction().commit();
+
         } catch (HibernateException e) {
-            e.printStackTrace();
+            throw new AppException(e.getMessage(), e);
         }
-        return user;
+        return userDto;
     }
 
-    public User delete(Long id) {
-        User user = null;
+    public UserDto findById(Long id) {
+        if (id <0) {
+            throw new AppException("Negative ID");
+        }
+        User entity = null;
+
         try (var session = HibernateUtil.openSession()) {
             session.beginTransaction();
 
-            user = session.get(User.class, id);
-            session.remove(user);
+            entity = session.get(User.class, id);
+            if (entity == null) {
+                throw new AppException("Can't find user with such ID:" + id);
+            }
 
             session.getTransaction().commit();
         } catch (HibernateException e) {
-            e.printStackTrace();
+            throw new AppException(e.getMessage(), e);
         }
-        return user;
+        return MAPPER.toDTO(entity);
     }
 
-    public void update(User user) {
+    public UserDto delete(Long id) {
+        if (id <0) {
+            throw new AppException("Negative ID");
+        }
+        User entity = null;
         try (var session = HibernateUtil.openSession()) {
             session.beginTransaction();
 
-            session.merge(user);
+            entity = session.get(User.class, id);
+            session.remove(entity);
 
             session.getTransaction().commit();
         } catch (HibernateException e) {
-            e.printStackTrace();
+            throw new AppException(e.getMessage(), e);
         }
+        LOG.info("Successfully deleted user with ID={}", id);
+        return MAPPER.toDTO(entity);
+    }
+
+    public UserDto update(UserDto userDto) {
+        if (userDto.id() == null) {
+            throw new AppException("ID should be not null");
+        }
+        User entity = null;
+        try (var session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+
+            entity = session.get(User.class, userDto.id());
+            if (entity == null) {
+                throw new AppException("Can't find user with such ID:" + userDto.id());
+            }
+
+            entity = session.merge(MAPPER.toEntity(userDto));
+
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            throw new AppException(e.getMessage(), e);
+        }
+        LOG.info("Successfully updated user with ID={}", entity.getId());
+        return MAPPER.toDTO(entity);
     }
 }
