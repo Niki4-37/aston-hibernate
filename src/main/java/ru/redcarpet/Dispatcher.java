@@ -1,7 +1,5 @@
 package ru.redcarpet;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -11,6 +9,7 @@ import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.ConsoleHandler;
+import ru.redcarpet.util.UserFromStringConverter;
 
 public class Dispatcher {
 
@@ -32,7 +31,14 @@ public class Dispatcher {
         while (true) {
             ConsoleHandler.write("choose method \"find\" \"create\" \"update\" \"delete\" or type \"exit\" to leave program");
             String methodName = ConsoleHandler.read().toLowerCase().trim();
-            var user = methods.get(methodName).get();
+            UserDto user = null;
+            
+            if (methods.containsKey(methodName)) {
+                user = methods.get(methodName).get();
+            } else {
+                ConsoleHandler.write("There is no such method: " + methodName + " try again");
+            }
+
             if (user != null) {
                 ConsoleHandler.write(user.toString());
             }
@@ -54,14 +60,9 @@ public class Dispatcher {
     private UserDto create() {
         ConsoleHandler.write("to create new user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" ");
         String userDescription = ConsoleHandler.read();
-        String[] values = userDescription.split(" ");
-        if (values.length < 3) {
-            ConsoleHandler.write("wrong data");
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        LocalDate birthDate = LocalDate.parse(values[2], formatter);
-        var userDto = new UserDto(null, values[0], values[1], birthDate, LocalDate.now());
+        UserDto userDto = null;
         try {
+            userDto = UserFromStringConverter.convert(userDescription);
             userDao.create(userDto);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage());
@@ -75,25 +76,21 @@ public class Dispatcher {
         UserDto user = null;
         try {
             user = userDao.findById(Long.valueOf(id));
+            ConsoleHandler.write(String.format(
+                """
+                Found user %s
+                to update user write: 
+                \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\"
+                """
+                , user.toString()));
+            String userDescription = ConsoleHandler.read();
+            UserDto updatedUserDto = UserFromStringConverter.convert(userDescription);
+            userDao.update(user.id(), updatedUserDto);
+            user = updatedUserDto;
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }
-        ConsoleHandler.write(user.toString());
-        ConsoleHandler.write("to update user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" ");
-        String userDescription = ConsoleHandler.read();
-        String[] values = userDescription.split(" ");
-        if (values.length < 3) {
-            ConsoleHandler.write("wrong data");
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        LocalDate birthDate = LocalDate.parse(values[2], formatter);
-        var updatedUserDto = new UserDto(user.id(), values[0], values[1], birthDate, user.createdAt());
-        try {
-            userDao.update(updatedUserDto);
-        } catch (AppException e) {
-            ConsoleHandler.write(e.getMessage());
-        }
-        return updatedUserDto;        
+        return user;
     }
 
     private UserDto delete() {

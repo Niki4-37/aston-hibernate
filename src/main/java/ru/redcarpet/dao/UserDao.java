@@ -76,20 +76,23 @@ public class UserDao {
         return MAPPER.toDTO(entity);
     }
 
-    public UserDto update(UserDto userDto) {
-        if (userDto.id() == null) {
+    public UserDto update(Long id, UserDto userDto) {
+        if (id == null) {
             throw new AppException("ID should be not null");
         }
         User entity = null;
         try (var session = HibernateUtil.openSession()) {
             session.beginTransaction();
 
-            entity = session.get(User.class, userDto.id());
+            entity = session.get(User.class, id);
             if (entity == null) {
-                throw new AppException("Can't find user with such ID:" + userDto.id());
+                throw new AppException("Can't find user with such ID:" + id);
             }
 
-            entity = session.merge(MAPPER.toEntity(userDto));
+            entity = MAPPER.toEntity(userDto);
+            entity.setId(id);
+            
+            session.merge(entity);
 
             session.getTransaction().commit();
         } catch (HibernateException e) {
