@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 import ru.redcarpet.dao.UserDao;
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
-import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.ConsoleHandler;
 import ru.redcarpet.util.UserFromStringConverter;
 
@@ -23,8 +22,8 @@ public class Dispatcher {
         methods.put("delete", ()->delete());
     }
 
-    public Dispatcher(UserMapper mapper) {
-        this.userDao = new UserDao(mapper);
+    public Dispatcher() {
+        this.userDao = new UserDao();
     }
 
     public void run() {
