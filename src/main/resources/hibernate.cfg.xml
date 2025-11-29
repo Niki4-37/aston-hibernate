@@ -11,7 +11,7 @@
    		<property name="connection.password">root</property> <!-- DB Password -->
    		
    		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property> <!-- DB Dialect -->
-   		<property name="hbm2ddl.auto">update</property> <!-- create / create-drop / update -->
+   		<property name="hbm2ddl.auto">${hbm2ddl.auto:update}</property> <!-- create / create-drop / update -->
 		
 		<property name="show_sql">false</property> <!-- Show SQL in console -->
 		<property name="format_sql">true</property> <!-- Show SQL formatted -->

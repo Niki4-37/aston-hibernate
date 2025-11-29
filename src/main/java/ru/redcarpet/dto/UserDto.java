@@ -2,6 +2,7 @@ package ru.redcarpet.dto;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 
 public record UserDto(
     Long id,
@@ -28,4 +29,21 @@ public record UserDto(
             + createdAt
             + " ]";
     }
- }
+
+        @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof UserDto other)) return false;
+
+        return Objects.equals(name,     other.name) &&
+               Objects.equals(email,    other.email) &&
+               Objects.equals(birthDate,other.birthDate) &&
+               Objects.equals(createdAt,other.createdAt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, email, birthDate, createdAt);
+    }
+}
