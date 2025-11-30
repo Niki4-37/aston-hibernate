@@ -16,13 +16,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.HibernateUtil;
 
 @Testcontainers
 public class UserDaoTest {
 
     @Container
-    public static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
+    static PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
         DockerImageName.parse("postgres:14.19-alpine3.21")
             .asCompatibleSubstituteFor("postgres"))
         .withDatabaseName("testdb")
@@ -30,7 +31,8 @@ public class UserDaoTest {
         .withPassword("sa");
 
 
-    private static UserDao USER_DAO;
+    static UserDao userDao;
+    static UserMapper mapper;
 
     @BeforeAll
     static void setUp() {
@@ -42,90 +44,80 @@ public class UserDaoTest {
 
         HibernateUtil.rebuildSessionFactory();
 
-        USER_DAO = new UserDao();
+        userDao = new UserDao();
+        mapper = new UserMapper();
+    }
+
+    private UserDto createTestUserAndSaveInDB(String name, String email, LocalDate birthDate) {
+        UserDto dto = new UserDto(
+            null,
+                name,
+                email,
+                birthDate,
+                LocalDate.now());
+        try (Session session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+            session.persist(mapper.toEntity(dto));
+            session.getTransaction().commit();
+        }
+        return dto;
+    }
+
+    private Long getIdByEmailAndNameAndBirhtDate(UserDto u) {
+        try (Session s = HibernateUtil.openSession()) {
+            return s.createQuery(
+                    "select id from User where email = :email and name = :name and birthDate = :birthDate",
+                    Long.class)
+                    .setParameter("email", u.email())
+                    .setParameter("name", u.name())
+                    .setParameter("birthDate", u.birthDate())
+                    .uniqueResult();
+        }
     }
 
     @Test
     @DisplayName("create new user and check in DB")
-    void createAndCheckInDB() {
-        UserDto newUser = new UserDto(null, "Ben", "bigben@example.com", LocalDate.of(2000,10,10), LocalDate.now());
-        USER_DAO.create(newUser);
+    void createAndCheckInDBSuccess() {
+        UserDto newUser = createTestUserAndSaveInDB("Ben", "bigben@example.com", LocalDate.of(2000,10,10));
 
-        try(Session session = HibernateUtil.openSession()) {
-            Long id = session.createQuery(
-                "select u.id from User u where u.email = :email and u.name = :name", Long.class)
-                .setParameter("email", newUser.email())
-                .setParameter("name", newUser.name())
-                .uniqueResult();
-            assertNotNull(id);
-        }
+        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
+        assertNotNull(id);
     }
 
     @Test
     @DisplayName("create and delete existing user")
-    void deleteExistingUser() {
-        UserDto newUser = new UserDto(null, "Jim Spear", "sharpspear@example.com", LocalDate.of(1980,01,20), LocalDate.now());
-        USER_DAO.create(newUser);
+    void deleteExistingUserSuccess() {
+        UserDto newUser = createTestUserAndSaveInDB("Jim Spear", "sharpspear@example.com", LocalDate.of(1980,01,20));
 
-        Long id;
-        try(Session session = HibernateUtil.openSession()) {
-            id = session.createQuery(
-                "select u.id from User u where u.email = :email and u.name = :name", Long.class)
-                .setParameter("email", newUser.email())
-                .setParameter("name", newUser.name())
-                .uniqueResult();
-        }
+        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
 
-        USER_DAO.delete(id);
+        userDao.delete(id);
 
-        try(Session session = HibernateUtil.openSession()) {
-            id = session.createQuery(
-                "select u.id from User u where u.email = :email and u.name = :name", Long.class)
-                .setParameter("email", newUser.email())
-                .setParameter("name", newUser.name())
-                .uniqueResult();
-            assertNull(id);
-        }
+        id = getIdByEmailAndNameAndBirhtDate(newUser);
+        assertNull(id);
     }
 
     @Test
     @DisplayName("create new user and find by id")
-    void testFindById() {
-        UserDto newUser = new UserDto(null, "Bubble Boy", "bubbleboy@example.com", LocalDate.of(1985,05,05), LocalDate.now());
-        USER_DAO.create(newUser);
+    void findByIdSuccess() {
+        UserDto newUser = createTestUserAndSaveInDB("Bubble Boy", "bubbleboy@example.com", LocalDate.of(1985,05,05));
 
-        Long id;
-        try(Session session = HibernateUtil.openSession()) {
-            id = session.createQuery(
-                "select u.id from User u where u.email = :email and u.name = :name", Long.class)
-                .setParameter("email", newUser.email())
-                .setParameter("name", newUser.name())
-                .uniqueResult();
-        }
+        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
 
-        UserDto foundUser = USER_DAO.findById(id);
+        UserDto foundUser = userDao.findById(id);
 
         assertNotNull(foundUser);
     }
 
     @Test
     @DisplayName("create new user and update data")
-    void testUpdate() {
-        UserDto newUser = new UserDto(null, "New Boy", "newboy@example.com", LocalDate.of(1985,05,05), LocalDate.now());
-        USER_DAO.create(newUser);
+    void updateSuccess() {
+        UserDto newUser = createTestUserAndSaveInDB("New Boy", "newboy@example.com", LocalDate.of(1985,05,05));
 
-        Long id;
-        try(Session session = HibernateUtil.openSession()) {
-            id = session.createQuery(
-                "select u.id from User u where u.email = :email and u.name = :name and u.createdAt = :createdAt", Long.class)
-                .setParameter("email", newUser.email())
-                .setParameter("name", newUser.name())
-                .setParameter("createdAt", newUser.createdAt())
-                .uniqueResult();
-        }
+        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
 
         UserDto updatedUser = new UserDto(null, "Yellow Boy", "yellowboy@example.com", LocalDate.of(1990,06,10), newUser.createdAt());
-        UserDto userFromDB = USER_DAO.update(id, updatedUser);
+        UserDto userFromDB = userDao.update(id, updatedUser);
         assertEquals(updatedUser, userFromDB);
     }
 }

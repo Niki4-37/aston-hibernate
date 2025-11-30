@@ -44,19 +44,26 @@ public class Dispatcher {
         }
     }
 
-    private UserDto findByid() {
+    UserDto findByid() {
         ConsoleHandler.write("find user with id: ");
-        String id = ConsoleHandler.read();
+        
+        Long id = -1L;
+        try {
+            id = Long.valueOf(ConsoleHandler.read());
+        } catch (NumberFormatException e) {
+            ConsoleHandler.write("Bad ID");
+        }
+
         UserDto user = null;
         try {
-            user = userDao.findById(Long.valueOf(id));
+            user = userDao.findById(id);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }
         return user;
     }
 
-    private UserDto create() {
+    UserDto create() {
         ConsoleHandler.write("to create new user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" ");
         String userDescription = ConsoleHandler.read();
         UserDto userDto = null;
@@ -69,12 +76,17 @@ public class Dispatcher {
         return userDto;
     }
 
-    private UserDto update() {
+    UserDto update() {
         ConsoleHandler.write("update user with id: ");
-        String id = ConsoleHandler.read();
+        Long id = -1L;
+        try {
+            id = Long.valueOf(ConsoleHandler.read());
+        } catch (NumberFormatException e) {
+            ConsoleHandler.write("Bad ID");
+        }
         UserDto user = null;
         try {
-            user = userDao.findById(Long.valueOf(id));
+            user = userDao.findById(id);
             ConsoleHandler.write(String.format(
                 """
                 Found user %s
@@ -92,12 +104,17 @@ public class Dispatcher {
         return user;
     }
 
-    private UserDto delete() {
+    UserDto delete() {
         ConsoleHandler.write("delete user with id: ");
-        String id = ConsoleHandler.read();
+        Long id = -1L;
+        try {
+            id = Long.valueOf(ConsoleHandler.read());
+        } catch (NumberFormatException e) {
+            ConsoleHandler.write("Bad ID");
+        }
         UserDto user = null;
         try {
-            user = userDao.delete(Long.valueOf(id));
+            user = userDao.delete(id);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }

@@ -59,6 +59,9 @@ public class UserDao {
 
         return MAPPER.toDTO(transactionHelper.executeInTransaction(session -> {
             var entity = session.get(User.class, id);
+            if (entity == null) {
+                throw new AppException("Can't find user with such ID:" + id);
+            }
             session.remove(entity);
             LOG.info("Successfully deleted user with ID={}", id);
             return entity;
