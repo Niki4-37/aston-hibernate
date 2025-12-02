@@ -11,7 +11,7 @@ import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.HibernateUtil;
 import ru.redcarpet.util.TransactionHelper;
 
-public class UserDao {
+public class UserDao implements DAOInterface<UserDto> {
 
     private final UserMapper MAPPER;
     private TransactionHelper transactionHelper;
@@ -22,6 +22,7 @@ public class UserDao {
         transactionHelper = new TransactionHelper();
     }
 
+    @Override
     public UserDto create(UserDto userDto) {
         if (userDto.id() != null) {
             throw new AppException("ID should be null");
@@ -33,6 +34,7 @@ public class UserDao {
         });
     }
 
+    @Override
     public UserDto findById(Long id) {
         if (id < 0) {
             throw new AppException("Negative ID");
@@ -52,6 +54,7 @@ public class UserDao {
         return MAPPER.toDTO(entity);
     }
 
+    @Override
     public UserDto delete(Long id) {
         if (id < 0) {
             throw new AppException("Negative ID");
@@ -59,12 +62,16 @@ public class UserDao {
 
         return MAPPER.toDTO(transactionHelper.executeInTransaction(session -> {
             var entity = session.get(User.class, id);
+            if (entity == null) {
+                throw new AppException("Can't find user with such ID:" + id);
+            }
             session.remove(entity);
             LOG.info("Successfully deleted user with ID={}", id);
             return entity;
         }));
     }
 
+    @Override
     public UserDto update(Long id, UserDto userDto) {
         if (id < 0) {
             throw new AppException("Negative ID");

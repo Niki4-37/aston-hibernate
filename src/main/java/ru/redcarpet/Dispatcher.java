@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import ru.redcarpet.dao.DAOInterface;
 import ru.redcarpet.dao.UserDao;
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
@@ -12,7 +13,7 @@ import ru.redcarpet.util.UserFromStringConverter;
 
 public class Dispatcher {
 
-    private final UserDao userDao;
+    private final DAOInterface<UserDto> userDao;
     private Map<String, Supplier<UserDto>> methods = new HashMap<>();
 
     {

@@ -4,6 +4,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import ru.redcarpet.exception.AppException;
 
 public final class HibernateUtil {
 
@@ -16,7 +17,7 @@ public final class HibernateUtil {
         try {
             factory = configuration.buildSessionFactory();
         } catch (HibernateException e) {
-            e.printStackTrace();
+            throw new AppException(e.getMessage(), e);
         } 
     }
 
