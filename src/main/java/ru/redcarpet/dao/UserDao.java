@@ -23,6 +23,9 @@ public class UserDao {
     }
 
     public UserDto create(UserDto userDto) {
+        if (userDto == null) {
+            throw new AppException("No new data");
+        }
         if (userDto.id() != null) {
             throw new AppException("ID should be null");
         }
@@ -71,6 +74,9 @@ public class UserDao {
     public UserDto update(Long id, UserDto userDto) {
         if (id < 0) {
             throw new AppException("Negative ID");
+        }
+        if (userDto == null) {
+            throw new AppException("No new data");
         }
 
         return MAPPER.toDTO(transactionHelper.executeInTransaction(session -> {

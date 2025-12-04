@@ -3,11 +3,15 @@ package ru.redcarpet.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -16,11 +20,19 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.exception.AppException;
 import ru.redcarpet.mapper.UserMapper;
 import ru.redcarpet.util.HibernateUtil;
 
 @Testcontainers
 public class UserDaoTest {
+
+    private final UserDto TEST_USER = new UserDto(
+        null, 
+        "Ben", 
+        "bigben@example.com", 
+        LocalDate.of(2000,10,10),
+        LocalDate.of(2025,12,4));
 
     @Container
     static PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
@@ -48,19 +60,30 @@ public class UserDaoTest {
         mapper = new UserMapper();
     }
 
-    private UserDto createTestUserAndSaveInDB(String name, String email, LocalDate birthDate) {
-        UserDto dto = new UserDto(
-            null,
-                name,
-                email,
-                birthDate,
-                LocalDate.now());
+    @BeforeEach
+    void prepareDB() {
+        saveUserInDB(TEST_USER);
+    }
+
+    @AfterEach
+    void clearDB() {
         try (Session session = HibernateUtil.openSession()) {
             session.beginTransaction();
-            session.persist(mapper.toEntity(dto));
+            session.createNativeQuery("TRUNCATE TABLE public.users RESTART IDENTITY CASCADE", Void.class).executeUpdate();
             session.getTransaction().commit();
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
         }
-        return dto;
+    }
+
+    private void saveUserInDB(UserDto user) {
+        try (Session session = HibernateUtil.openSession()) {
+            session.beginTransaction();
+            session.persist(mapper.toEntity(user));
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
+        }  
     }
 
     private Long getIdByEmailAndNameAndBirhtDate(UserDto u) {
@@ -76,33 +99,57 @@ public class UserDaoTest {
     }
 
     @Test
-    @DisplayName("create new user and check in DB")
+    @DisplayName("create new user - success")
     void createAndCheckInDBSuccess() {
-        UserDto newUser = createTestUserAndSaveInDB("Ben", "bigben@example.com", LocalDate.of(2000,10,10));
-
+        UserDto newUser = new UserDto(
+            null, 
+            "Jim Spear", 
+            "sharpspear@example.com", 
+            LocalDate.of(1980,01,20), 
+            LocalDate.of(2025,11,30));
+        userDao.create(newUser);
         Long id = getIdByEmailAndNameAndBirhtDate(newUser);
         assertNotNull(id);
     }
 
     @Test
-    @DisplayName("create and delete existing user")
-    void deleteExistingUserSuccess() {
-        UserDto newUser = createTestUserAndSaveInDB("Jim Spear", "sharpspear@example.com", LocalDate.of(1980,01,20));
+    @DisplayName("create new user with null throw exception")
+    void createUserWithNoDataThrowAppException() {
 
-        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
+        AppException ex = assertThrows(AppException.class,
+                () -> userDao.create(null));
+
+        assertEquals("No new data", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("delete existing user - success")
+    void deleteExistingUserSuccess() {
+
+        Long id = getIdByEmailAndNameAndBirhtDate(TEST_USER);
 
         userDao.delete(id);
 
-        id = getIdByEmailAndNameAndBirhtDate(newUser);
+        id = getIdByEmailAndNameAndBirhtDate(TEST_USER);
         assertNull(id);
     }
 
     @Test
-    @DisplayName("create new user and find by id")
-    void findByIdSuccess() {
-        UserDto newUser = createTestUserAndSaveInDB("Bubble Boy", "bubbleboy@example.com", LocalDate.of(1985,05,05));
+    @DisplayName("delete user with wrong id throw exception")
+    void deleteUserNotFoundThrowsAppException() {
+        Long notExistingId = 42L;
 
-        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
+        AppException ex = assertThrows(AppException.class,
+                () -> userDao.delete(notExistingId));
+
+        assertEquals("Can't find user with such ID:" + notExistingId, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("find by id - success")
+    void findByIdSuccess() {
+
+        Long id = getIdByEmailAndNameAndBirhtDate(TEST_USER);
 
         UserDto foundUser = userDao.findById(id);
 
@@ -110,14 +157,51 @@ public class UserDaoTest {
     }
 
     @Test
-    @DisplayName("create new user and update data")
+    @DisplayName("find not existing user throw exception")
+    void findUserWithWrongIdThrowAppException() {
+        Long notExistingId = 42L;
+
+        AppException ex = assertThrows(AppException.class,
+                () -> userDao.findById(notExistingId));
+
+        assertEquals("Can't find user with such ID:" + notExistingId, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("update data - success")
     void updateSuccess() {
-        UserDto newUser = createTestUserAndSaveInDB("New Boy", "newboy@example.com", LocalDate.of(1985,05,05));
 
-        Long id = getIdByEmailAndNameAndBirhtDate(newUser);
+        Long id = getIdByEmailAndNameAndBirhtDate(TEST_USER);
 
-        UserDto updatedUser = new UserDto(null, "Yellow Boy", "yellowboy@example.com", LocalDate.of(1990,06,10), newUser.createdAt());
+        UserDto updatedUser = new UserDto(
+            null, 
+            "Yellow Boy", 
+            "yellowboy@example.com", 
+            LocalDate.of(1990,06,10), 
+            TEST_USER.createdAt());
         UserDto userFromDB = userDao.update(id, updatedUser);
         assertEquals(updatedUser, userFromDB);
+    }
+
+    @Test
+    @DisplayName("update not existing user throw exception")
+    void updateUserWithWrongIdThrowAppException() {
+        Long notExistingId = 42L;
+
+        AppException ex = assertThrows(AppException.class,
+                () -> userDao.update(notExistingId, TEST_USER));
+
+        assertEquals("Can't find user with such ID:" + notExistingId, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("update with null user throw exception")
+    void updateUserWithNoDataThrowAppException() {
+        Long id = getIdByEmailAndNameAndBirhtDate(TEST_USER);
+
+        AppException ex = assertThrows(AppException.class,
+                () -> userDao.update(id, null));
+
+        assertEquals("No new data", ex.getMessage());
     }
 }
