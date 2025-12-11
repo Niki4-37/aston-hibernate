@@ -3,16 +3,21 @@ package ru.redcarpet.util;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.stereotype.Component;
+
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 
+@Component
 public final class UserFromStringConverter {
 
     private UserFromStringConverter() {}
 
     public static UserDto convert(String userDescription) {
-        if (!UserValidator.validate(userDescription)) {
-            throw new AppException("Validation failed");
+        try {
+            UserValidator.validate(userDescription);
+        } catch (AppException e) {
+            throw new AppException(e.getMessage());
         }
         String[] values = userDescription.split("\\s+");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");

@@ -1,14 +1,11 @@
 package ru.redcarpet;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -18,35 +15,29 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import ru.redcarpet.dao.UserDao;
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.util.ConsoleHandler;
 
+@SpringBootTest
 public class DispatcherTest {
     
     private final LocalDate CREATED_AT = LocalDate.of(2025, 11, 30);
+    
+    @MockitoBean
+    UserController controller;
+    @Autowired
     Dispatcher dispatcher;
 
-    UserDao mockUserDao;
     MockedStatic<ConsoleHandler> consoleMock;
     
 
     @BeforeEach
     void setUp() {
-        mockUserDao = mock(UserDao.class);
-        dispatcher = new Dispatcher();
-
-        java.lang.reflect.Field daoField;
-        try {
-            daoField = Dispatcher.class.getDeclaredField("userDao");
-            daoField.setAccessible(true);
-            daoField.set(dispatcher, mockUserDao);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
         consoleMock = mockStatic(ConsoleHandler.class);
     }
 
@@ -68,30 +59,28 @@ public class DispatcherTest {
             CREATED_AT);
 
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
-        when(mockUserDao.findById(42L)).thenReturn(expectedUser);
+        when(controller.getUserById(42L)).thenReturn(expectedUser.toString());
 
         // Act
-        UserDto actual = dispatcher.findByid();
+        String message = dispatcher.findByid();
 
         // Assert
-        assertSame(expectedUser, actual);
+        assertEquals("Found " + expectedUser.toString(), message);
         consoleMock.verify(() -> ConsoleHandler.write("find user with id: "));
     }
 
     @Test
     @DisplayName("test findById method with invalid id - success")
-    void testFindByIdWithException() throws Exception {
+    void testFindByIdWithInvalidId() throws Exception {
         String idInput = "invalid";
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
-        when(mockUserDao.findById(anyLong()))
-                .thenThrow(new AppException("Bad ID"));
-
-        UserDto actual = dispatcher.findByid();
-        assertNull(actual);
+         
+        dispatcher.findByid();
+ 
         consoleMock.verify(() -> ConsoleHandler.write(
                 "find user with id: "));
         consoleMock.verify(() -> ConsoleHandler.write(
-                "Bad ID try again"));
+                "Bad ID"));
     }
 
     @Test
@@ -99,18 +88,17 @@ public class DispatcherTest {
     void testCreateWithMAnualInputSuccess() throws Exception {
         String idInput = "Jack jack@example.com 10-10-2000";
         UserDto createdUser = new UserDto(
-            null, 
+            14L, 
             "Jack", 
             "jack@example.com", 
             LocalDate.of(2000, 10, 10), 
             CREATED_AT);
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);        
-
-        UserDto result = dispatcher.create();
-
-        assertEquals(createdUser.name(), result.name());
-        assertEquals(createdUser.email(), result.email());
-        verify(mockUserDao).create(eq(result));
+        when(controller.createUser(any(UserDto.class))).thenReturn(createdUser.toString());
+        String message = dispatcher.create();
+        assertEquals("Successfully created " + createdUser.toString(), message);
+        consoleMock.verify(() -> ConsoleHandler.write(
+                "to create new user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" "));
     }
 
     @Test
@@ -119,12 +107,11 @@ public class DispatcherTest {
         String input = "ggg badmail invalid-date";
         consoleMock.when(ConsoleHandler::read).thenReturn(input);
 
-        UserDto result = dispatcher.create();
+        dispatcher.create();
 
-        assertNull(result);
         consoleMock.verify(() -> ConsoleHandler.write(
                 "to create new user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" "));
-        consoleMock.verify(() -> ConsoleHandler.write("Validation failed"));
+        consoleMock.verify(() -> ConsoleHandler.write("Wrong e-mail format"));
     }
 
     @Test
@@ -149,12 +136,12 @@ public class DispatcherTest {
                    .thenReturn(idInput)
                    .thenReturn(newDescription);
 
-        when(mockUserDao.findById(10L)).thenReturn(existing);
+        when(controller.getUserById(10L)).thenReturn(existing.toString());
+        when(controller.updateUser(eq(10L), any(UserDto.class))).thenReturn(updated.toString());
 
-        UserDto result = dispatcher.update();
+        String message = dispatcher.update();
 
-        assertEquals(updated.name(), result.name());
-        verify(mockUserDao).update(eq(10L), eq(result));
+        assertEquals("Successfully updated " + updated.toString(), message);
     }
 
     @Test
@@ -163,7 +150,7 @@ public class DispatcherTest {
         String idInput = "999";
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
 
-        when(mockUserDao.findById(999L))
+        when(controller.getUserById(999L))
                 .thenThrow(new AppException("Can't find user with such ID:999 try again"));
 
         try {
@@ -185,11 +172,11 @@ public class DispatcherTest {
             CREATED_AT);
 
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
-        when(mockUserDao.delete(7L)).thenReturn(deleted);
+        when(controller.deleteUser(7L)).thenReturn(deleted.toString());
 
-        UserDto result = dispatcher.delete();
+        String message = dispatcher.delete();
 
-        assertSame(deleted, result);
+        assertEquals("Successfully deleted " + deleted.toString(), message);
     }
 
     @Test
@@ -198,13 +185,11 @@ public class DispatcherTest {
         String idInput = "invalid";
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
 
-        when(mockUserDao.delete(anyLong()))
+        when(controller.deleteUser(anyLong()))
                 .thenThrow(new AppException("Bad ID"));
 
-        try {
-            dispatcher.delete();
-        } catch (AppException e) {
-            assertTrue(e.getMessage().contains("Bad ID"));
-        }
+        dispatcher.delete();
+        consoleMock.verify(() -> ConsoleHandler.write(
+                "Bad ID"));
     }
 }

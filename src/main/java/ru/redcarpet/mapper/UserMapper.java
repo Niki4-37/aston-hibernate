@@ -1,8 +1,11 @@
 package ru.redcarpet.mapper;
 
+import org.springframework.stereotype.Component;
+
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.entity.User;
 
+@Component
 public final class UserMapper {
 
     public User toEntity(UserDto userDto) {

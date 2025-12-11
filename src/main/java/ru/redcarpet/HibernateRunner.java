@@ -1,10 +1,12 @@
 package ru.redcarpet;
 
-public class HibernateRunner {
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HibernateRunner{
 
     public static void main(String[] args) {
-        
-        Dispatcher dispatcher = new Dispatcher();
-        dispatcher.run();
+        SpringApplication.run(HibernateRunner.class, args);        
     }
 }

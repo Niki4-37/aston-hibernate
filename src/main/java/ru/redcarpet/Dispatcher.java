@@ -2,50 +2,67 @@ package ru.redcarpet;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-import ru.redcarpet.dao.DAOInterface;
-import ru.redcarpet.dao.UserDao;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PreDestroy;
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.util.ConsoleHandler;
 import ru.redcarpet.util.UserFromStringConverter;
 
-public class Dispatcher {
+@Component
+@ConditionalOnProperty(name = "console.runner.enabled", havingValue = "true")
+public class Dispatcher implements CommandLineRunner {
 
-    private final DAOInterface<UserDto> userDao;
-    private Map<String, Supplier<UserDto>> methods = new HashMap<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final UserController controller;
+    
+    public Dispatcher(UserController controller) {
+        this.controller = controller;
+    }
+
+    private Map<String, Supplier<String>> methods = new HashMap<>();
 
     {
-        methods.put("find",() -> findByid());
-        methods.put("create", () -> create());
-        methods.put("update", () -> update());
-        methods.put("delete", ()->delete());
+        methods.put("1", () -> findByid());
+        methods.put("2", () -> create());
+        methods.put("3", () -> update());
+        methods.put("4", () -> delete());
     }
 
-    public Dispatcher() {
-        this.userDao = new UserDao();
+    @Override
+    public void run(String... args) {
+        executor.submit(this::consoleLoop);
     }
 
-    public void run() {
+    private void consoleLoop(){
         while (true) {
-            ConsoleHandler.write("choose method \"find\" \"create\" \"update\" \"delete\" or type \"exit\" to leave program");
+            ConsoleHandler.write("""
+                type number of methods to use it: 
+                1 - find
+                2 - create
+                3 - update
+                4 - delete 
+                or type \"exit\" to leave program""");
             String methodName = ConsoleHandler.read().toLowerCase().trim();
-            UserDto user = null;
             
-            if (methods.containsKey(methodName)) {
-                user = methods.get(methodName).get();
-            } else {
-                ConsoleHandler.write("There is no such method: " + methodName + " try again");
-            }
-
-            if (user != null) {
-                ConsoleHandler.write(user.toString());
-            }
+            String message = methods.getOrDefault(methodName, () -> "There is no such method: " + methodName + " try again").get();
+            ConsoleHandler.write(message);
         }
     }
 
-    UserDto findByid() {
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+    }
+
+    String findByid() {
         ConsoleHandler.write("find user with id: ");
         
         Long id = -1L;
@@ -55,29 +72,27 @@ public class Dispatcher {
             ConsoleHandler.write("Bad ID");
         }
 
-        UserDto user = null;
         try {
-            user = userDao.findById(id);
+            return "Found " + controller.getUserById(id);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }
-        return user;
+        return "";
     }
 
-    UserDto create() {
+    String create() {
         ConsoleHandler.write("to create new user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" ");
         String userDescription = ConsoleHandler.read();
-        UserDto userDto = null;
         try {
-            userDto = UserFromStringConverter.convert(userDescription);
-            userDao.create(userDto);
+            var userDto = UserFromStringConverter.convert(userDescription);
+            return "Successfully created " + controller.createUser(userDto);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage());
         }
-        return userDto;
+        return "";
     }
 
-    UserDto update() {
+    String update() {
         ConsoleHandler.write("update user with id: ");
         Long id = -1L;
         try {
@@ -85,27 +100,19 @@ public class Dispatcher {
         } catch (NumberFormatException e) {
             ConsoleHandler.write("Bad ID");
         }
-        UserDto user = null;
         try {
-            user = userDao.findById(id);
-            ConsoleHandler.write(String.format(
-                """
-                Found user %s
-                to update user write: 
-                \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\"
-                """
-                , user.toString()));
+            String message = controller.getUserById(id);
+            ConsoleHandler.write(message + "to update user write: \"name\" \"e-mail\" \"birht date\" in format \"DD-MM-YYYY\" ");
             String userDescription = ConsoleHandler.read();
             UserDto updatedUserDto = UserFromStringConverter.convert(userDescription);
-            userDao.update(user.id(), updatedUserDto);
-            user = updatedUserDto;
+            return "Successfully updated " + controller.updateUser(id, updatedUserDto);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }
-        return user;
+        return "";
     }
 
-    UserDto delete() {
+    String delete() {
         ConsoleHandler.write("delete user with id: ");
         Long id = -1L;
         try {
@@ -113,12 +120,11 @@ public class Dispatcher {
         } catch (NumberFormatException e) {
             ConsoleHandler.write("Bad ID");
         }
-        UserDto user = null;
         try {
-            user = userDao.delete(id);
+            return "Successfully deleted " + controller.deleteUser(id);
         } catch (AppException e) {
             ConsoleHandler.write(e.getMessage() + " try again");
         }
-        return user;
+        return "";
     }
 }
