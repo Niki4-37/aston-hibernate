@@ -1,6 +1,7 @@
 package ru.redcarpet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -10,10 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,9 +45,18 @@ public class DispatcherTest {
     }
 
     @Test
+    @DisplayName("test invalid console command")
+    void testInvalidConsoleCommand() {
+        String methodName = "test";
+        String message = dispatcher.methods.getOrDefault(methodName, () -> "There is no such method: " + methodName + " try again").get();
+        assertNotNull(message);
+        assertTrue(message.contains(message), "Mesage should contains invalid command");
+        assertEquals("There is no such method: " + methodName + " try again", message);
+    }
+
+    @Test
     @DisplayName("test findById method with valid id - success")
     void testFindByIdSuccess() {
-        // Arrange
         String idInput = "42";
         UserDto expectedUser = new UserDto(
             42L, 
@@ -61,10 +68,8 @@ public class DispatcherTest {
         consoleMock.when(ConsoleHandler::read).thenReturn(idInput);
         when(controller.getUserById(42L)).thenReturn(expectedUser.toString());
 
-        // Act
         String message = dispatcher.findByid();
 
-        // Assert
         assertEquals("Found " + expectedUser.toString(), message);
         consoleMock.verify(() -> ConsoleHandler.write("find user with id: "));
     }

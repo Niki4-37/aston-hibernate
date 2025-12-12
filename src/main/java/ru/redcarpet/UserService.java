@@ -30,12 +30,16 @@ public class UserService {
     }
 
     public UserDto createUser(UserDto userDto) {
-
-        var entityToSave = mapper.toEntity(userDto);
+        User entityToSave = mapper.toEntity(userDto);
         entityToSave.setId(null);
-        
-        var savedEntity = repo.save(entityToSave);
-        log.info("created user with id = {}", savedEntity.getId());
+        User savedEntity = null;
+        try {
+            savedEntity = repo.save(entityToSave);
+            log.info("created user with id = {}", savedEntity.getId());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            log.info("Can't create user with same e-mail");
+            throw new AppException("Can't create user. User with this e-mail already exists", e);
+        }
         return mapper.toDTO(savedEntity);
     }
 

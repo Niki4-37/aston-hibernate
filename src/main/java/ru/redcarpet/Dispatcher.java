@@ -27,7 +27,7 @@ public class Dispatcher implements CommandLineRunner {
         this.controller = controller;
     }
 
-    private Map<String, Supplier<String>> methods = new HashMap<>();
+    Map<String, Supplier<String>> methods = new HashMap<>();
 
     {
         methods.put("1", () -> findByid());
@@ -44,7 +44,7 @@ public class Dispatcher implements CommandLineRunner {
     private void consoleLoop(){
         while (true) {
             ConsoleHandler.write("""
-                type number of methods to use it: 
+                type number of method to use it: 
                 1 - find
                 2 - create
                 3 - update

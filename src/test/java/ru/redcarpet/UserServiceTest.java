@@ -6,9 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -64,8 +68,29 @@ public class UserServiceTest {
         testUserId = user.getId();
     }
 
+    @AfterEach
+    void clearDb() {
+        if (repo.count() > 0) {
+            repo.deleteAll();
+        }
+    }
+
+    @AfterAll
+    static void tearDown(@Autowired(required = false)HikariDataSource hikariDataSource) {
+        closeHikariPool(hikariDataSource);
+    }
+
+    private static void closeHikariPool(HikariDataSource hikariDataSource) {
+        if (hikariDataSource != null && !hikariDataSource.isClosed()) {
+            try {
+                hikariDataSource.close();
+            } catch (Exception e) {
+                System.err.println("Error closing Hikari pool: " + e.getMessage());
+            }
+        }
+    }
+
     @Test
-    @Transactional
     void testCreateUser() {
         UserDto newUser = new UserDto(
         null, 
@@ -78,7 +103,22 @@ public class UserServiceTest {
     }
 
     @Test
-    @Transactional
+    void createUserWithSameEmailThrowException() {
+        UserDto newUser= new UserDto(
+            null,
+            "Jim",
+            testUser.getEmail(),
+            LocalDate.of(2000, 01, 01),
+            LocalDate.of(2025,12,9));
+        AppException exception = assertThrows(
+            AppException.class, 
+            () -> service.createUser(newUser)
+        );
+
+        assertEquals("Can't create user. User with this e-mail already exists", exception.getMessage());
+    }
+
+    @Test
     void testDeleteUser() {
         UserDto deletedUse = service.deleteUser(testUserId);
         assertNotNull(deletedUse);
@@ -102,7 +142,6 @@ public class UserServiceTest {
     }
 
     @Test
-    @Transactional
     void testUpdateUser() {
         UserDto userToUpdate = new UserDto(
         testUserId, 
