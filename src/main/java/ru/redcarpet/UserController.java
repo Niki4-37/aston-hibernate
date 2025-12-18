@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.service.UserService;
 
 @Controller
 public class UserController {

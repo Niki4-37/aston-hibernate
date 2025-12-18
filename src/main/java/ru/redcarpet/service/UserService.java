@@ -1,25 +1,35 @@
-package ru.redcarpet;
+package ru.redcarpet.service;
 
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import ru.redcarpet.dao.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
+import ru.redcarpet.dto.KafkaUser;
+import ru.redcarpet.enums.OperationType;
+import ru.redcarpet.repository.UserRepository;
+import ru.redcarpet.util.AppConst;
 import ru.redcarpet.dto.UserDto;
 import ru.redcarpet.entity.User;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.mapper.UserMapper;
+
+import java.time.Instant;
 
 @Service
 public class UserService {
 
     private final UserRepository repo;
     private final UserMapper mapper;
+    private final KafkaTemplate<String, KafkaUser> kafkaTemplate;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    public UserService(UserRepository repo, UserMapper mapper) {
+    public UserService(UserRepository repo, UserMapper mapper, KafkaTemplate<String, KafkaUser> kafkaTemplate) {
         this.repo = repo;
         this.mapper = mapper;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public UserDto getUserById(Long id) {
@@ -29,18 +39,24 @@ public class UserService {
         return mapper.toDTO(userEntity);
     }
 
+    @Transactional
     public UserDto createUser(UserDto userDto) {
         User entityToSave = mapper.toEntity(userDto);
         entityToSave.setId(null);
         User savedEntity = null;
         try {
             savedEntity = repo.save(entityToSave);
-            log.info("created user with id = {}", savedEntity.getId());
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             log.info("Can't create user with same e-mail");
             throw new AppException("Can't create user. User with this e-mail already exists", e);
         }
-        return mapper.toDTO(savedEntity);
+        var savedUser = mapper.toDTO(savedEntity);
+        try {
+            sendToKafka(OperationType.CREATE, savedUser);
+        } catch (Exception e) {
+            throw new AppException("There is problem to send massage to Kafka", e);
+        }
+        return savedUser;
     }
 
     public UserDto updateUser(Long id, UserDto updatedUserDto) {
@@ -53,10 +69,29 @@ public class UserService {
         return mapper.toDTO(updatedEntity);
     }
 
+    @Transactional
     public UserDto deleteUser(Long id) {
         var deletedUser = getUserById(id);
         repo.deleteById(id);
-        log.info("deleted user with id = {}", deletedUser.id());
+        try {
+            sendToKafka(OperationType.DELETE, deletedUser);
+        } catch (Exception e) {
+            throw new AppException("There is problem to send massage to Kafka", e);
+        }
         return deletedUser;
+    }
+
+    private void sendToKafka(OperationType type, UserDto user) throws Exception {
+        var kafkaUser = new KafkaUser(type.toString(), user.email(), user.id(), Instant.now());
+
+        kafkaTemplate.send(AppConst.TOPIC, String.valueOf(user.id()), kafkaUser)
+            .thenAccept(result -> {
+            RecordMetadata meta = result.getRecordMetadata();
+            log.info("Kafka: {} event sent (partition {} offset {})",
+                    type.toString(), meta.partition(), meta.offset());})
+            .exceptionally(ex -> {
+                log.error(("Kafka: failed to send {} event"), type.toString());
+                return null;
+        });        
     }
 }

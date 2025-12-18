@@ -1,4 +1,4 @@
-package ru.redcarpet.dao;
+package ru.redcarpet.repository;
 
 import java.time.LocalDate;
 
