@@ -26,6 +26,26 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
 
+  mail:
+    host: smtp.mail.ru
+    port: 465
+    username: ${SMTP_USERNAME}  # переменная среды
+    password: ${SMTP_PASSWORD}  # переменная среды
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true  # обязательное требование Mail.ru
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+
+email:
+  sender:
+    default: ${SMTP_USERNAME}  # отправитель = логин SMTP
+
 logging:
   file:
     #path: ./logs/
