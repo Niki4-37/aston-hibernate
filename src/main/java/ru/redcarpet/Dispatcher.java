@@ -11,7 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
-import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.database.UserController;
+import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.util.ConsoleHandler;
 import ru.redcarpet.util.UserFromStringConverter;

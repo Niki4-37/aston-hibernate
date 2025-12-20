@@ -1,4 +1,4 @@
-package ru.redcarpet.dto;
+package ru.redcarpet.kafka.dto;
 
 import java.io.Serializable;
 import java.time.Instant;

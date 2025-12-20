@@ -20,11 +20,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import ru.redcarpet.repository.UserRepository;
-import ru.redcarpet.dto.UserDto;
-import ru.redcarpet.entity.User;
+import ru.redcarpet.database.UserService;
+import ru.redcarpet.database.dto.UserDto;
+import ru.redcarpet.database.entity.User;
+import ru.redcarpet.database.repository.UserRepository;
 import ru.redcarpet.exception.AppException;
-import ru.redcarpet.service.UserService;
 
 @Testcontainers
 @SpringBootTest(properties = "console.runner.enabled=false")

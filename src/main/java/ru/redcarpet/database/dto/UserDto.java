@@ -1,4 +1,4 @@
-package ru.redcarpet.dto;
+package ru.redcarpet.database.dto;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;

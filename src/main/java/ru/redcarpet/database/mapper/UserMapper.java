@@ -1,9 +1,9 @@
-package ru.redcarpet.mapper;
+package ru.redcarpet.database.mapper;
 
 import org.springframework.stereotype.Component;
 
-import ru.redcarpet.dto.UserDto;
-import ru.redcarpet.entity.User;
+import ru.redcarpet.database.dto.UserDto;
+import ru.redcarpet.database.entity.User;
 
 @Component
 public final class UserMapper {

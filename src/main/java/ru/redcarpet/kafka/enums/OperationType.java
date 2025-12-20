@@ -1,4 +1,4 @@
-package ru.redcarpet.enums;
+package ru.redcarpet.kafka.enums;
 
 public enum OperationType {
     CREATE,

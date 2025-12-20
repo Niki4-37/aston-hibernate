@@ -52,7 +52,8 @@ logging:
     name: ./logs/aston-hibernate.log
   level:
     # org.apache.kafka: DEBUG
-    org.springframework.kafka: DEBUG
+    # org.springframework.kafka: DEBUG
+    ru.redcarpet: INFO
 
 console:
   runner:

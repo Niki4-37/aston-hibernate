@@ -1,4 +1,4 @@
-package ru.redcarpet.config;
+package ru.redcarpet.kafka.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

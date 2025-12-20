@@ -1,4 +1,4 @@
-package ru.redcarpet.config;
+package ru.redcarpet.kafka.config;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -16,7 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
-import ru.redcarpet.dto.KafkaUser;
+import ru.redcarpet.kafka.dto.KafkaUser;
 import ru.redcarpet.util.AppConst;
 
 import java.util.HashMap;
@@ -59,7 +59,7 @@ public class KafkaConfig {
                    props.getConsumer().getKeyDeserializer());
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                    props.getConsumer().getValueDeserializer());
-        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "ru.redcarpet.dto");
+        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "ru.redcarpet.kafka.dto");
         return new DefaultKafkaConsumerFactory<>(config);
     }
 

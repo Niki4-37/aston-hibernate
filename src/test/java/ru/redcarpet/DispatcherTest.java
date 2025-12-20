@@ -17,7 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.database.UserController;
+import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 import ru.redcarpet.util.ConsoleHandler;
 

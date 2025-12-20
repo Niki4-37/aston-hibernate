@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.springframework.stereotype.Component;
 
-import ru.redcarpet.dto.UserDto;
+import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.exception.AppException;
 
 @Component

@@ -1,4 +1,4 @@
-package ru.redcarpet.service;
+package ru.redcarpet.database;
 
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
@@ -7,14 +7,15 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
-import ru.redcarpet.dto.KafkaUser;
-import ru.redcarpet.enums.OperationType;
-import ru.redcarpet.repository.UserRepository;
+
 import ru.redcarpet.util.AppConst;
-import ru.redcarpet.dto.UserDto;
-import ru.redcarpet.entity.User;
+import ru.redcarpet.database.dto.UserDto;
+import ru.redcarpet.database.entity.User;
+import ru.redcarpet.database.mapper.UserMapper;
+import ru.redcarpet.database.repository.UserRepository;
 import ru.redcarpet.exception.AppException;
-import ru.redcarpet.mapper.UserMapper;
+import ru.redcarpet.kafka.dto.KafkaUser;
+import ru.redcarpet.kafka.enums.OperationType;
 
 import java.time.Instant;
 

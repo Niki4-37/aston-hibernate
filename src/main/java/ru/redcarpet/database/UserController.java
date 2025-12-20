@@ -1,11 +1,10 @@
-package ru.redcarpet;
+package ru.redcarpet.database;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
-import ru.redcarpet.dto.UserDto;
-import ru.redcarpet.service.UserService;
+import ru.redcarpet.database.dto.UserDto;
 
 @Controller
 public class UserController {

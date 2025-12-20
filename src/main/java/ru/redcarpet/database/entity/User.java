@@ -1,4 +1,4 @@
-package ru.redcarpet.entity;
+package ru.redcarpet.database.entity;
 
 import java.time.LocalDate;
 
