@@ -25,6 +25,10 @@ public class UserServiceListener {
             topics = AppConst.TOPIC,
             groupId = "user-service-consumer")
     public void handleUserServiceEvent(ConsumerRecord<String, KafkaUser> record) {
+        if (record.value() == null) {
+            log.warn("Recieved empty data for key = {}", record.key());
+            return;
+        }
         String operationName = record.value().getOperation();
         log.info("Recieved user event {}", operationName);
         var operationType = OperationType.valueOf(record.value().getOperation());
@@ -36,9 +40,11 @@ public class UserServiceListener {
             case DELETE :
                 message.append("Hello! Your account has been deleted");
                 break;
-            default : message.append("Something strange has happened, and we're trying to figure it out");
+            default : 
+                message.append("Something strange has happened, and we're trying to figure it out");
+                break;
         }
-        String subject = operationName + "account";
+        String subject = operationName + " account";
         emailService.sendEmail(record.value().getEmail(), subject, message.toString());
     }
 }

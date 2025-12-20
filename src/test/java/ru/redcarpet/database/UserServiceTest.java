@@ -1,8 +1,11 @@
-package ru.redcarpet;
+package ru.redcarpet.database;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 
 import java.time.LocalDate;
 
@@ -13,18 +16,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import ru.redcarpet.database.UserService;
 import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.database.entity.User;
 import ru.redcarpet.database.repository.UserRepository;
 import ru.redcarpet.exception.AppException;
+import ru.redcarpet.kafka.dto.KafkaUser;
 
 @Testcontainers
 @SpringBootTest(properties = "console.runner.enabled=false")
@@ -43,6 +48,9 @@ public class UserServiceTest {
 
     @Autowired
     UserService service;
+
+    @MockitoBean
+    KafkaTemplate<String, KafkaUser> kafkaTemplate;
 
     final User testUser = new User(
         null, 
@@ -115,6 +123,21 @@ public class UserServiceTest {
         );
 
         assertEquals("Can't create user. User with this e-mail already exists", exception.getMessage());
+    }
+
+    @Test
+    void createUserAndKafkaSendingFail() {
+        UserDto newUser= new UserDto(
+            null,
+            "Jim",
+            "red@example.com",
+            LocalDate.of(2000, 01, 01),
+            LocalDate.of(2025,12,9));
+        doThrow(new RuntimeException("Kafka down")).when(kafkaTemplate).send(anyString(), anyString(), any(KafkaUser.class));
+        AppException exception = assertThrows(
+            AppException.class,
+            () -> service.createUser(newUser));
+        assertEquals("There is problem to send massage to Kafka", exception.getMessage());
     }
 
     @Test
