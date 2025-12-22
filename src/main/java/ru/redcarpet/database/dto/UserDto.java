@@ -4,11 +4,16 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Null;
+import jakarta.validation.constraints.Past;
+
 public record UserDto(
-    Long id,
-    String name,
-    String email,
-    LocalDate birthDate,
+    @Null Long id,
+    @NotEmpty String name,
+    @Email String email,
+    @Past LocalDate birthDate,
     LocalDate createdAt
 ) {
     public Long getAge() {

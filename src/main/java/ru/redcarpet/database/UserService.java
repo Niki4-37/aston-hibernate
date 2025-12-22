@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityNotFoundException;
 import ru.redcarpet.util.AppConst;
 import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.database.entity.User;
 import ru.redcarpet.database.mapper.UserMapper;
 import ru.redcarpet.database.repository.UserRepository;
-import ru.redcarpet.exception.AppException;
 import ru.redcarpet.kafka.dto.KafkaUser;
 import ru.redcarpet.kafka.enums.OperationType;
 
@@ -35,7 +35,7 @@ public class UserService {
 
     public UserDto getUserById(Long id) {
         User userEntity = repo.findById(id)
-            .orElseThrow(() -> new AppException("Can't find user with such ID:" + id)); 
+            .orElseThrow(() -> new EntityNotFoundException("Can't find user with such ID:" + id)); 
 
         return mapper.toDTO(userEntity);
     }
@@ -49,14 +49,10 @@ public class UserService {
             savedEntity = repo.save(entityToSave);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             log.info("Can't create user with same e-mail");
-            throw new AppException("Can't create user. User with this e-mail already exists", e);
+            throw e;
         }
         var savedUser = mapper.toDTO(savedEntity);
-        try {
-            sendToKafka(OperationType.CREATE, savedUser);
-        } catch (Exception e) {
-            throw new AppException("There is problem to send massage to Kafka", e);
-        }
+        sendToKafka(OperationType.CREATE, savedUser);
         return savedUser;
     }
 
@@ -74,15 +70,11 @@ public class UserService {
     public UserDto deleteUser(Long id) {
         var deletedUser = getUserById(id);
         repo.deleteById(id);
-        try {
-            sendToKafka(OperationType.DELETE, deletedUser);
-        } catch (Exception e) {
-            throw new AppException("There is problem to send massage to Kafka", e);
-        }
+        sendToKafka(OperationType.DELETE, deletedUser);
         return deletedUser;
     }
 
-    private void sendToKafka(OperationType type, UserDto user) throws Exception {
+    private void sendToKafka(OperationType type, UserDto user) {
         var kafkaUser = new KafkaUser(type.toString(), user.email(), user.id(), Instant.now());
 
         kafkaTemplate.send(AppConst.TOPIC, String.valueOf(user.id()), kafkaUser)
@@ -91,7 +83,7 @@ public class UserService {
             log.info("Kafka: {} event sent (partition {} offset {})",
                     type.toString(), meta.partition(), meta.offset());})
             .exceptionally(ex -> {
-                log.error(("Kafka: failed to send {} event"), type.toString());
+                log.error(("Kafka: failed to send {} event, cause {}"), type.toString(), ex.getCause());
                 return null;
         });        
     }
