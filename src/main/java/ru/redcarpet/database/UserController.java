@@ -11,11 +11,20 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import org.springframework.http.MediaType;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import ru.redcarpet.database.dto.UserDto;
+import ru.redcarpet.exception.ErrorDto;
 
 @Controller
 @RequestMapping("/users")
+@Tag(name = "User controller", description = "CRUD operations for user")
 public class UserController {
 
     private final UserService service;
@@ -25,6 +34,19 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by id",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "User found",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "User not found",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                   schema = @Schema(implementation = ErrorDto.class))
+    )})
     public ResponseEntity<UserDto> getUserById(
         @PathVariable("id") Long id
     ) {
@@ -32,6 +54,19 @@ public class UserController {
     }
 
     @PostMapping
+    @Operation(summary = "Create new user",
+        responses = {
+            @ApiResponse(
+                responseCode = "201", 
+                description = "User created",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Bad request, validation fail, for more info check error message",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                   schema = @Schema(implementation = ErrorDto.class))
+    )})
     public ResponseEntity<UserDto> createUser(
         @RequestBody @Valid UserDto userDto
     ) {
@@ -41,6 +76,19 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update user",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "User updated",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Bad request, validation fail, for more info check error message",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                   schema = @Schema(implementation = ErrorDto.class))
+    )})
     public ResponseEntity<UserDto> updateUser(
         @PathVariable("id")Long id,
         @RequestBody @Valid UserDto updatedUserDto
@@ -50,6 +98,19 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete user",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "User deleted",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "User not found", 
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                   schema = @Schema(implementation = ErrorDto.class))
+    )})
     public ResponseEntity<UserDto> deleteUser(
         @PathVariable("id") Long id
     ) {

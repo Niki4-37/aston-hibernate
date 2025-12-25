@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -11,7 +13,9 @@ import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Past;
 
 public record UserDto(
-    @Null Long id,
+    @Null 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    Long id,
     @NotEmpty (message="empty name field")
     String name,
     @Email (message="wrong email format")
@@ -19,6 +23,7 @@ public record UserDto(
     String email,
     @Past(message="birthday should be at past time")
     LocalDate birthDate,
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     LocalDate createdAt
 ) {
     public Long getAge() {

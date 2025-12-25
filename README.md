@@ -31,3 +31,9 @@ localhost:8080/email/send
   "body": "Это тестовое письмо из Spring‑приложения."
 }
 ```
+
+## Swagger UI
+
+```url
+http://localhost:8080/swagger-ui/index.html
+```
