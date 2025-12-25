@@ -55,7 +55,3 @@ logging:
     # org.springframework.kafka: DEBUG
     ru.redcarpet: INFO
 
-console:
-  runner:
-    enabled: true
-

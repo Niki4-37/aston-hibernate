@@ -6,9 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.concurrent.CompletableFuture;
 
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -109,7 +110,11 @@ public class UserServiceTest {
         "lalala@example.com", 
         LocalDate.of(2000,01,20),
         LocalDate.of(2025,12,9));
-        var savedUser = service.createUser(newUser);
+        
+        when(kafkaTemplate.send(anyString(), anyString(), any(KafkaUser.class)))
+            .thenReturn(CompletableFuture.completedFuture(null));
+        
+            var savedUser = service.createUser(newUser);
         assertNotNull(savedUser.id());
     }
 
@@ -131,6 +136,8 @@ public class UserServiceTest {
 
     @Test
     void testDeleteUser() {
+        when(kafkaTemplate.send(anyString(), anyString(), any(KafkaUser.class)))
+            .thenReturn(CompletableFuture.completedFuture(null));
         UserDto deletedUse = service.deleteUser(testUserId);
         assertNotNull(deletedUse);
     }

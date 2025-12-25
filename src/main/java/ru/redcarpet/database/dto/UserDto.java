@@ -5,15 +5,20 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Past;
 
 public record UserDto(
     @Null Long id,
-    @NotEmpty String name,
-    @Email String email,
-    @Past LocalDate birthDate,
+    @NotEmpty (message="empty name field")
+    String name,
+    @Email (message="wrong email format")
+    @NotBlank(message="empty email field")
+    String email,
+    @Past(message="birthday should be at past time")
+    LocalDate birthDate,
     LocalDate createdAt
 ) {
     public Long getAge() {

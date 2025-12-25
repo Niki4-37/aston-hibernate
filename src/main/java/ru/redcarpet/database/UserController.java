@@ -49,7 +49,7 @@ public class UserController {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/id")
+    @DeleteMapping("/{id}")
     public ResponseEntity<UserDto> deleteUser(
         @PathVariable("id") Long id
     ) {

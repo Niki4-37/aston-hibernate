@@ -18,6 +18,7 @@ import ru.redcarpet.kafka.dto.KafkaUser;
 import ru.redcarpet.kafka.enums.OperationType;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Service
 public class UserService {
@@ -44,6 +45,7 @@ public class UserService {
     public UserDto createUser(UserDto userDto) {
         User entityToSave = mapper.toEntity(userDto);
         entityToSave.setId(null);
+        entityToSave.setCreatedAt(LocalDate.now());
         User savedEntity = null;
         try {
             savedEntity = repo.save(entityToSave);
