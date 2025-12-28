@@ -1,0 +1,16 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: aston-service
+    url: http://app:8080  # Контейнерное имя сервиса
+    routes:
+      - name: aston-route
+        paths:
+          - /api
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true

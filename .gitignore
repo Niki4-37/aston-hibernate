@@ -66,3 +66,6 @@ ehthumbs.db
 *.log
 *.tmp
 *.bak
+
+.env
+!.env.example
