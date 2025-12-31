@@ -1,16 +1,38 @@
 _format_version: "3.0"
 _transform: true
 
+# services:
+#   - name: aston-service
+#     host: aston-app
+#     port: 8080
+#     protocol: http
+#     routes:
+#       - name: aston-route
+#         paths:
+#           - /api
+#         methods:
+#           - GET
+#           - POST
+#           - PUT
+#           - DELETE
+#         strip_path: true
+
 services:
   - name: aston-service
-    url: http://app:8080  # Контейнерное имя сервиса
-    routes:
-      - name: aston-route
-        paths:
-          - /api
-        methods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-        strip_path: true
+    url: http://aston-app:8080
+    # retries: 5
+    # connect_timeout: 60000
+    # write_timeout: 60000
+    # read_timeout: 60000
+
+routes:
+  - name: aston-app-route
+    service: aston-service
+    paths:
+      - /api
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    strip_path: true

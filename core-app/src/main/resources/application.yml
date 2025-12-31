@@ -46,6 +46,15 @@ email:
   sender:
     default: ${SMTP_USERNAME}  # отправитель = логин SMTP
 
+eureka:
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka
+      registerWithEureka: true     # Регистрироваться в Eureka
+      fetchRegistry: true         # Загружать реестр сервисов
+    instance:
+      preferIpAddress: false     # Использовать имя хоста (не IP)
+
 logging:
   file:
     #path: ./logs/
