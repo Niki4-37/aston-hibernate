@@ -5,12 +5,13 @@ import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.persistence.EntityNotFoundException;
+import ru.redcarpet.kafka.exception.KafkaSendException;
 
-@ControllerAdvice
+@RestControllerAdvice 
 public class AppExceptionHandler {
 
     @ExceptionHandler(exception = {
@@ -44,5 +45,14 @@ public class AppExceptionHandler {
             e.getMessage(),
             LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDto);
-    }   
+    }
+    
+    @ExceptionHandler(exception = KafkaSendException.class)
+    public ResponseEntity<ErrorDto> handleKafkaSend(Exception e) {
+        var errorDto = new ErrorDto(
+            "Failed to publish event to Kafka",
+            e.getMessage(),
+            LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDto);
+    }
 }

@@ -26,7 +26,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ru.redcarpet.email.EmailService;
-import ru.redcarpet.kafka.dto.KafkaUser;
+import ru.redcarpet.kafka.dto.KafkaUserDto;
 import ru.redcarpet.kafka.enums.OperationType;
 import ru.redcarpet.util.AppConst;
 
@@ -36,15 +36,15 @@ import ru.redcarpet.util.AppConst;
 public class UserServiceListenerTest {
     
     @Autowired
-    KafkaTemplate<String, KafkaUser> kafkaTemplate;
+    KafkaTemplate<String, KafkaUserDto> kafkaTemplate;
     @MockitoBean
     EmailService service;
 
-    KafkaUser testUser;
+    KafkaUserDto testUser;
 
     @BeforeEach
     void setUp() {
-        testUser = new KafkaUser(
+        testUser = new KafkaUserDto(
             "none", 
             "lightning@example.com", 
             1L, 
@@ -65,7 +65,7 @@ public class UserServiceListenerTest {
         }).when(service).sendEmail(anyString(), anyString(), anyString());
 
         kafkaTemplate.send(
-            new ProducerRecord<String,KafkaUser>(
+            new ProducerRecord<String,KafkaUserDto>(
                 AppConst.TOPIC, 
                 testUser.getUserId().toString(), 
                 testUser

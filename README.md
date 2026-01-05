@@ -17,7 +17,15 @@ LocalDate createdAt
 
 ## Config 
 
-В репозитории находится .env.example, изменить имя на .env установить `SMTP_USERNAME` и `SMTP_PASSWORD` для email-api.
+В Докере
+``` 
+docker pull kong/kong-gateway:3.13-ubuntu
+docker pull apache/kafka:4.1.1
+docker pull postgres:14.19-alpine3.21
+docker pull alpine:3
+```
+
+В репозитории .env.example переименовать в .env, установить `SMTP_USERNAME` и `SMTP_PASSWORD` для email-api.
 
 ## Email API
 
@@ -31,7 +39,7 @@ localhost:8080/email/send
 
 ```json
 {
-  "to": "redcarpet@mail.ru",
+  "to": "to_1@gmail.com",
   "subject": "Тест отправки через Mail.ru",
   "body": "Это тестовое письмо из Spring‑приложения."
 }
@@ -65,3 +73,7 @@ GET http://localhost:8000/api/aston-service/users/42
 ```url
 http://localhost:8761
 ```
+
+## Resilience4j circuitbreaker:
+
+GET http://localhost:8080/actuator/circuitbreakers

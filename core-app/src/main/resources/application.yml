@@ -17,43 +17,92 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
     consumer:
       group-id: user-service-consumer
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        retries: 1
+        reconnect.backoff.ms: 5000
+        reconnect.backoff.max.ms: 60000
+        retry.backoff.ms: 1000
+        request.timeout.ms: 30000
+        session.timeout.ms: 10000
+        max.poll.interval.ms: 300000
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        request.timeout.ms: 10000
+        delivery.timeout.ms: 15000
+        retries: 1
+        retry.backoff.ms: 1000
+        reconnect.backoff.ms: 2000
+        reconnect.backoff.max.ms: 10000
+        metadata.fetch.timeout.ms: 5000
+        transaction.timeout.ms: 20000
+        enable.idempotence: true
+        transactional.id: tx-${spring.application.instance_id:0}
+        acks: all
 
   mail:
     host: smtp.mail.ru
     port: 465
-    username: ${SMTP_USERNAME}  # переменная среды
-    password: ${SMTP_PASSWORD}  # переменная среды
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
     protocol: smtps
     properties:
       mail:
         smtp:
           auth: true
           ssl:
-            enable: true  # обязательное требование Mail.ru
+            enable: true
           socketFactory:
             class: javax.net.ssl.SSLSocketFactory
             port: 465
 
 email:
   sender:
-    default: ${SMTP_USERNAME}  # отправитель = логин SMTP
+    default: ${SMTP_USERNAME}
 
 eureka:
     client:
       serviceUrl:
         defaultZone: http://localhost:8761/eureka
-      registerWithEureka: true     # Регистрироваться в Eureka
-      fetchRegistry: true         # Загружать реестр сервисов
+      registerWithEureka: true
+      fetchRegistry: true
     instance:
-      preferIpAddress: false     # Использовать имя хоста (не IP)
+      preferIpAddress: false
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      kafkaSend:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        eventConsumerBufferSize: 10
+        recordExceptions:
+                - org.apache.kafka.common.errors.TimeoutException
+                - java.net.ConnectException
+                - java.net.UnknownHostException
+                - org.springframework.kafka.core.KafkaProducerException 
+                - java.util.concurrent.ExecutionException
+                - ru.redcarpet.kafka.exception.KafkaSendException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,circuitbreakers
+    health:
+      show-details: always
 
 logging:
   file:

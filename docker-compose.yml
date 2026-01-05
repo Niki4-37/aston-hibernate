@@ -30,7 +30,7 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       # --------- LISTENERS ----------
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://aston-kafka:9092
       # --------- CONTROLLER ----------
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -48,12 +48,13 @@ services:
     healthcheck:
       test: ["CMD", "bash", "-c", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
       interval: 10s          # checking interval
-      timeout: 5s           # waiting until checking complete
+      timeout: 5s            # waiting until checking complete
       retries: 5             # count missing to «unhealthy»
       start_period: 30s      # boot‑time
 
   #Eureca server
   eureka-server:
+    image: aston-hibernate-eureka-server:lates
     build:
       context: ./eureka-server
       dockerfile: Dockerfile
@@ -141,6 +142,7 @@ services:
     restart: always
 
   service-registrator:
+    image: aston-hibernate-service-registrator:latest
     build:
       context: ./registrator
     container_name: service-registrator
@@ -161,7 +163,7 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: aston-kafka:9092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
     ports:
       - "8080:8080"

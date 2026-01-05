@@ -7,7 +7,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import ru.redcarpet.email.EmailService;
-import ru.redcarpet.kafka.dto.KafkaUser;
+import ru.redcarpet.kafka.dto.KafkaUserDto;
 import ru.redcarpet.kafka.enums.OperationType;
 import ru.redcarpet.util.AppConst;
 
@@ -24,7 +24,7 @@ public class UserServiceListener {
     @KafkaListener(
             topics = AppConst.TOPIC,
             groupId = "user-service-consumer")
-    public void handleUserServiceEvent(ConsumerRecord<String, KafkaUser> record) {
+    public void handleUserServiceEvent(ConsumerRecord<String, KafkaUserDto> record) {
         if (record.value() == null) {
             log.warn("Recieved empty data for key = {}", record.key());
             return;

@@ -3,19 +3,19 @@ package ru.redcarpet.kafka.dto;
 import java.io.Serializable;
 import java.time.Instant;
 
-public class KafkaUser implements Serializable {
+public class KafkaUserDto implements Serializable {
     private String operation;
     private String email;
     private Long userId;
     private Instant timestamp;
     
-    public KafkaUser(String operation, String email, Long userId, Instant timestamp) {
+    public KafkaUserDto(String operation, String email, Long userId, Instant timestamp) {
         this.operation = operation;
         this.email = email;
         this.userId = userId;
         this.timestamp = timestamp;
 }
-    public KafkaUser() {}
+    public KafkaUserDto() {}
     
     public String getOperation() {
         return operation;

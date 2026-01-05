@@ -4,12 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.concurrent.CompletableFuture;
 
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -22,10 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -34,7 +28,7 @@ import org.testcontainers.utility.DockerImageName;
 import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.database.entity.User;
 import ru.redcarpet.database.repository.UserRepository;
-import ru.redcarpet.kafka.dto.KafkaUser;
+
 
 @Testcontainers
 @SpringBootTest(properties = "console.runner.enabled=false")
@@ -53,9 +47,6 @@ public class UserServiceTest {
 
     @Autowired
     UserService service;
-
-    @MockitoBean
-    KafkaTemplate<String, KafkaUser> kafkaTemplate;
 
     final User testUser = new User(
         null, 
@@ -110,11 +101,8 @@ public class UserServiceTest {
         "lalala@example.com", 
         LocalDate.of(2000,01,20),
         LocalDate.of(2025,12,9));
-        
-        when(kafkaTemplate.send(anyString(), anyString(), any(KafkaUser.class)))
-            .thenReturn(CompletableFuture.completedFuture(null));
-        
-            var savedUser = service.createUser(newUser);
+
+        var savedUser = service.createUser(newUser);
         assertNotNull(savedUser.id());
     }
 
@@ -136,8 +124,6 @@ public class UserServiceTest {
 
     @Test
     void testDeleteUser() {
-        when(kafkaTemplate.send(anyString(), anyString(), any(KafkaUser.class)))
-            .thenReturn(CompletableFuture.completedFuture(null));
         UserDto deletedUse = service.deleteUser(testUserId);
         assertNotNull(deletedUse);
     }
