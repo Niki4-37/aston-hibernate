@@ -60,7 +60,7 @@ services:
       dockerfile: Dockerfile
     container_name: eureka-server
     ports:
-      - "8761:8761"
+      - 8761:8761
     networks:
       - aston-network
     healthcheck:
@@ -160,13 +160,11 @@ services:
       dockerfile: Dockerfile
     container_name: aston-app
     environment:
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: aston-kafka:9092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
     ports:
-      - "8080:8080"
+      - 8080:8080
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -174,10 +172,40 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      notification-service:
+        condition: service_healthy
     networks:
       - aston-network
     volumes:
       - ./logs:/app/logs
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service  
+    environment:
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: aston-kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    ports:
+      - 8082:8082
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - aston-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   aston-network:

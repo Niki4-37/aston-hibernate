@@ -41,3 +41,12 @@ spring:
 email:
   sender:
     default: ${SMTP_USERNAME}
+
+eureka:
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka
+      registerWithEureka: true
+      fetchRegistry: true
+    instance:
+      preferIpAddress: false
