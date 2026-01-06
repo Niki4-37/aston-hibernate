@@ -7,22 +7,24 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import ru.redcarpet.KafkaUserDto;
+import ru.redcarpet.OperationType;
 import ru.redcarpet.database.dto.UserDto;
-import ru.redcarpet.kafka.KafkaConnectionManager;
-import ru.redcarpet.kafka.dto.KafkaUserDto;
-import ru.redcarpet.kafka.enums.OperationType;
 import ru.redcarpet.kafka.exception.KafkaSendException;
-import ru.redcarpet.util.AppConst;
+import ru.redcarpet.kafka.support.KafkaConnectionManager;
 
 @Service
 public class KafkaMessageService {
 
     private final KafkaTemplate<String, KafkaUserDto> kafkaTemplate;
     private final KafkaConnectionManager connectionManager;
+    @Value("${spring.kafka.topic}")
+    private String topic;
 
     private final static Logger log = LoggerFactory.getLogger(KafkaMessageService.class);
     
@@ -49,10 +51,11 @@ public class KafkaMessageService {
                 userDto.id(), 
                 Instant.now());
             kafkaTemplate.send(
-                    AppConst.TOPIC,
+                    topic,
                     String.valueOf(userDto.id()),
                     kafkaUser)
                         .get(10, TimeUnit.SECONDS);
+            log.info("Kafka has sent message");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new KafkaSendException("Kafka send interrupted", e);

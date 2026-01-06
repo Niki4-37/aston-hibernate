@@ -1,4 +1,4 @@
-package ru.redcarpet.kafka;
+package ru.redcarpet.kafka.support;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

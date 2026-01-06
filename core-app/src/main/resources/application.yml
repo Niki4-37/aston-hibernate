@@ -16,22 +16,9 @@ spring:
       hibernate.format_sql: true
 
   kafka:
+    topic: ${KAFKA_USER_DTO_TOPIC:kafka-user-dto}
     bootstrap-servers: localhost:9092
-    listener:
-      auto-startup: false
-    consumer:
-      group-id: user-service-consumer
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
-      properties:
-        retries: 1
-        reconnect.backoff.ms: 5000
-        reconnect.backoff.max.ms: 60000
-        retry.backoff.ms: 1000
-        request.timeout.ms: 30000
-        session.timeout.ms: 10000
-        max.poll.interval.ms: 300000
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
@@ -48,25 +35,6 @@ spring:
         transactional.id: tx-${spring.application.instance_id:0}
         acks: all
 
-  mail:
-    host: smtp.mail.ru
-    port: 465
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    protocol: smtps
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: true
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
-            port: 465
-
-email:
-  sender:
-    default: ${SMTP_USERNAME}
 
 eureka:
     client:

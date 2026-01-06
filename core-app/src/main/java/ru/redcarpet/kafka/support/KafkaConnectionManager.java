@@ -1,4 +1,4 @@
-package ru.redcarpet.kafka;
+package ru.redcarpet.kafka.support;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,7 +15,6 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Service;
 
 @Service
-
 public class KafkaConnectionManager {
 
     private final KafkaListenerEndpointRegistry registry;

@@ -1,4 +1,4 @@
-package ru.redcarpet.kafka;
+package ru.redcarpet.kafka.support;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.health.contributor.Health;

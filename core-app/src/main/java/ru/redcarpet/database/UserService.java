@@ -7,11 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import ru.redcarpet.OperationType;
 import ru.redcarpet.database.dto.UserDto;
 import ru.redcarpet.database.entity.User;
 import ru.redcarpet.database.mapper.UserMapper;
 import ru.redcarpet.database.repository.UserRepository;
-import ru.redcarpet.kafka.enums.OperationType;
+
 import ru.redcarpet.kafka.service.KafkaMessageService;
 
 import java.time.LocalDate;

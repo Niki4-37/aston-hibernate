@@ -1,4 +1,4 @@
-package ru.redcarpet.kafka.service;
+package ru.redcarpet.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -6,32 +6,31 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import ru.redcarpet.KafkaUserDto;
+import ru.redcarpet.OperationType;
 import ru.redcarpet.email.EmailService;
-import ru.redcarpet.kafka.dto.KafkaUserDto;
-import ru.redcarpet.kafka.enums.OperationType;
-import ru.redcarpet.util.AppConst;
 
 @Component
-public class UserServiceListener {
-
+public class KafkaUserDtoListener {
+    
     private final EmailService emailService;
-    private static final Logger log = LoggerFactory.getLogger(UserServiceListener.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaUserDtoListener.class);
 
-    public UserServiceListener(EmailService emailService) {
+    public KafkaUserDtoListener(EmailService emailService) {
         this.emailService = emailService;
     }
 
     @KafkaListener(
-            topics = AppConst.TOPIC,
-            groupId = "user-service-consumer")
+            topics = "${spring.kafka.topic}",
+            groupId = "${spring.kafka.consumer.group-id}")
     public void handleUserServiceEvent(ConsumerRecord<String, KafkaUserDto> record) {
         if (record.value() == null) {
             log.warn("Recieved empty data for key = {}", record.key());
             return;
         }
-        String operationName = record.value().getOperation();
+        String operationName = record.value().operation();
         log.info("Recieved user event {}", operationName);
-        var operationType = OperationType.valueOf(record.value().getOperation());
+        var operationType = OperationType.valueOf(operationName);
         StringBuilder message = new StringBuilder();
         switch (operationType) {
             case CREATE : 
@@ -45,6 +44,6 @@ public class UserServiceListener {
                 break;
         }
         String subject = operationName + " account";
-        emailService.sendEmail(record.value().getEmail(), subject, message.toString());
+        emailService.sendEmail(record.value().email(), subject, message.toString());
     }
 }
