@@ -22,6 +22,7 @@
         <module>core-app</module>
 		<module>notification-service</module>
 		<module>kafka-addition</module>
+		<module>configuration-server</module>
     </modules>
 
     <properties>

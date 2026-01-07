@@ -154,14 +154,15 @@ services:
     restart: on-failure
 
   # Core application
-  aston-app:
+  user-service:
     build:
       context: ./core-app
       dockerfile: Dockerfile
-    container_name: aston-app
+    container_name: user-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: aston-kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configuration-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
     ports:
       - 8080:8080
@@ -188,6 +189,7 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: aston-kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configuration-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
     ports:
       - 8082:8082
@@ -196,12 +198,32 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      configuration-server:
+        condition: service_healthy
     networks:
       - aston-network
     volumes:
       - ./logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  configuration-server:
+    build:
+      context: ./configuration-server
+      dockerfile: Dockerfile
+    container_name: configuration-server
+    ports:
+      - 8888:8888
+    networks:
+      - aston-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5

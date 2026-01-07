@@ -1,83 +1,8 @@
+server:
+  port: 8080
+
 spring:
   application:
-    name: aston-hibernate
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/intensive_2
-    username: postgres
-    password: root
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true              
-    properties:
-      hibernate.format_sql: true
-
-  kafka:
-    topic: ${KAFKA_USER_DTO_TOPIC:kafka-user-dto}
-    bootstrap-servers: localhost:9092
-
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
-      properties:
-        request.timeout.ms: 10000
-        delivery.timeout.ms: 15000
-        retries: 1
-        retry.backoff.ms: 1000
-        reconnect.backoff.ms: 2000
-        reconnect.backoff.max.ms: 10000
-        metadata.fetch.timeout.ms: 5000
-        transaction.timeout.ms: 20000
-        enable.idempotence: true
-        transactional.id: tx-${spring.application.instance_id:0}
-        acks: all
-
-
-eureka:
-    client:
-      serviceUrl:
-        defaultZone: http://localhost:8761/eureka
-      registerWithEureka: true
-      fetchRegistry: true
-    instance:
-      preferIpAddress: false
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      kafkaSend:
-        registerHealthIndicator: true
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10s
-        minimumNumberOfCalls: 5
-        slidingWindowSize: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        eventConsumerBufferSize: 10
-        recordExceptions:
-                - org.apache.kafka.common.errors.TimeoutException
-                - java.net.ConnectException
-                - java.net.UnknownHostException
-                - org.springframework.kafka.core.KafkaProducerException 
-                - java.util.concurrent.ExecutionException
-                - ru.redcarpet.kafka.exception.KafkaSendException
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,env,circuitbreakers
-    health:
-      show-details: always
-
-logging:
-  file:
-    #path: ./logs/
-    name: ./logs/aston-hibernate.log
-  level:
-    # org.apache.kafka: DEBUG
-    # org.springframework.kafka: DEBUG
-    ru.redcarpet: INFO
-
+    name: user-service
+  config:
+    import: optional:configserver:http://localhost:8888

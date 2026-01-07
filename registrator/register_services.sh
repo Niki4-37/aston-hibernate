@@ -73,9 +73,8 @@ register_route() {
 # ------------------------------------------------------------------
 # 3. Register services
 # ------------------------------------------------------------------
-register_service aston-service http://aston-app:8080
-register_route   aston-service /api/aston-service
-
+register_service user-service http://user-service:8080
+register_route   user-service /api
 register_service notification-service http://notification-service:8082
 register_route   notification-service /api/notification
 

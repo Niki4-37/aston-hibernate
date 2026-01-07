@@ -4,49 +4,5 @@ server:
 spring:
   application:
     name: notification-service
-  mail:
-    host: smtp.mail.ru
-    port: 465
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    protocol: smtps
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: true
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
-            port: 465
-  kafka:
-    topic: ${KAFKA_USER_DTO_TOPIC:kafka-user-dto}
-    bootstrap-servers: localhost:9092
-    # listener:
-    #   auto-startup: false
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:kafka-user-dto-consumer}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
-      properties:
-        retries: 3
-        reconnect.backoff.ms: 5000
-        reconnect.backoff.max.ms: 60000
-        retry.backoff.ms: 1000
-        request.timeout.ms: 30000
-        session.timeout.ms: 10000
-        max.poll.interval.ms: 300000
-
-email:
-  sender:
-    default: ${SMTP_USERNAME}
-
-eureka:
-    client:
-      serviceUrl:
-        defaultZone: http://localhost:8761/eureka
-      registerWithEureka: true
-      fetchRegistry: true
-    instance:
-      preferIpAddress: false
+  config:
+    import: optional:configserver:http://localhost:8888
