@@ -1,5 +1,6 @@
 package ru.redcarpet.database;
 
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -47,10 +48,10 @@ public class UserController {
                 content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                    schema = @Schema(implementation = ErrorDto.class))
     )})
-    public ResponseEntity<UserDto> getUserById(
+    public ResponseEntity<EntityModel<UserDto>> getUserById(
         @PathVariable("id") Long id
     ) {
-        return ResponseEntity.ok(service.getUserById(id));
+        return ResponseEntity.ok(service.getUserById(id).toEntityModel());
     }
 
     @PostMapping
@@ -89,12 +90,12 @@ public class UserController {
                 content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                    schema = @Schema(implementation = ErrorDto.class))
     )})
-    public ResponseEntity<UserDto> updateUser(
+    public ResponseEntity<EntityModel<UserDto>> updateUser(
         @PathVariable("id")Long id,
         @RequestBody @Valid UserDto updatedUserDto
     ) {
         var updated = service.updateUser(id, updatedUserDto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(updated.toEntityModel());
     }
 
     @DeleteMapping("/{id}")

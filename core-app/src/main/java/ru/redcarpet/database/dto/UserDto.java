@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.core.Relation;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.Email;
@@ -11,7 +14,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Past;
+import ru.redcarpet.database.UserController;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+@Relation(collectionRelation = "users")
 public record UserDto(
     @Null 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -60,5 +68,14 @@ public record UserDto(
     @Override
     public int hashCode() {
         return Objects.hash(name, email, birthDate, createdAt);
+    }
+
+    public EntityModel<UserDto> toEntityModel() {
+        return EntityModel.of(
+            this,
+            linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel(),
+            linkTo(methodOn(UserController.class).updateUser(id, this)).withRel("update"),
+            linkTo(methodOn(UserController.class).deleteUser(id)).withRel("delete")
+        );
     }
 }
