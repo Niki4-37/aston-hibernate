@@ -31,7 +31,6 @@ LocalDate createdAt
 Подготовить Docker, загрузив образы:
 
 ``` 
-docker pull kong/kong-gateway:3.13-ubuntu
 docker pull apache/kafka:4.1.1
 docker pull postgres:14.19-alpine3.21
 docker pull alpine:3
@@ -63,24 +62,19 @@ POST localhost:8082/email/send
 http://localhost:8080/swagger-ui/index.html
 ```
 
-## Kong
-
-Проверка статуса kong gateway API
-GET http://localhost:8001/status
+## Spring cloud gateway
 
 Проверка маршрутов
-GET http://localhost:8001/routes
 
-Проверка сервисов
-GET http://localhost:8001/services
+GET http://localhost:8000/actuator/gateway/routes
 
-### Работа с User сервиса user-service через kong
+### Работа с User сервиса user-service через gateway
 
 Найти пользователя
-GET http://localhost:8000/api/users/2
+GET http://localhost:8000/users/2
 
 Создать пользователя
-POST http://localhost:8000/api/users
+POST http://localhost:8000/users
 
 с телом JSON
 
@@ -92,9 +86,9 @@ POST http://localhost:8000/api/users
 }
 ```
 
-### Работа с email сервиса notification-service через kong
+### Работа с email сервиса notification-service через gareway
 
-POST http://localhost:8000/api/notification/email/send
+POST http://localhost:8000/email/send
 
 с телом JSON
 

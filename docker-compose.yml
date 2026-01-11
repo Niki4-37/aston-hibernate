@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL app DB
   postgres:
     image: postgres:14.19-alpine3.21
     container_name: aston-postgres
@@ -19,7 +18,6 @@ services:
       timeout: 10s
       retries: 6
 
-  # Kafka
   kafka:
     image: apache/kafka:4.1.1
     container_name: aston-kafka
@@ -52,7 +50,6 @@ services:
       retries: 5             # count missing to «unhealthy»
       start_period: 30s      # boot‑time
 
-  #Eureca server
   eureka-server:
     image: aston-hibernate-eureka-server:lates
     build:
@@ -70,90 +67,32 @@ services:
       retries: 5
       start_period: 30s
   
-  # Kong DB
-  kong-database:
-    image: postgres:14.19-alpine3.21
-    container_name: kong-database
-    environment:
-      POSTGRES_USER: ${KONG_PG_USER}
-      POSTGRES_PASSWORD: ${KONG_PG_PASSWORD}
-      POSTGRES_DB: ${KONG_DATABASE}
-    volumes:
-      - kong-database-data:/var/lib/postgresql/data
-    networks:
-      - aston-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "${KONG_PG_USER}" , "-d" , "${KONG_DATABASE}"]
-      interval: 5s
-      timeout: 10s
-      retries: 6
-
- # Kong Migrations (one-time job)
-  kong-migration:
-    image: kong/kong-gateway:3.13-ubuntu
-    container_name: kong-migration
-    depends_on:
-      kong-database:
-        condition: service_healthy
-    command: ["kong", "migrations", "bootstrap"]
-    environment:
-      KONG_PG_DATABASE: ${KONG_DATABASE}
-      KONG_PG_HOST: ${KONG_PG_HOST}
-      KONG_PG_USER: ${KONG_PG_USER}
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
-      KONG_MIGRATE: true
-    networks:
-      - aston-network
-    restart: "no"  # no restart after use
-
-  # Kong Gateway
-  kong:
-    image: kong/kong-gateway:3.13-ubuntu
-    container_name: kong-gateway
-    environment:
-      KONG_PG_DATABASE: ${KONG_DATABASE}
-      KONG_PG_HOST: ${KONG_PG_HOST}
-      KONG_PG_USER: ${KONG_PG_USER}
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
-      KONG_PROXY_ACCESS_LOG: ${KONG_PROXY_ACCESS_LOG}
-      KONG_ADMIN_ACCESS_LOG: ${KONG_ADMIN_ACCESS_LOG}
-      KONG_PROXY_ERROR_LOG: ${KONG_PROXY_ERROR_LOG}
-      KONG_ADMIN_ERROR_LOG: ${KONG_ADMIN_ERROR_LOG}
-      KONG_ADMIN_LISTEN: ${KONG_ADMIN_LISTEN}
-      KONG_PROXY_LISTEN: ${KONG_PROXY_LISTEN}
-    ports:
-      - "8000:8000"   # Proxy (HTTP)
-      - "8443:8443"   # Proxy (HTTPS)
-      - "8001:8001"   # Admin API
-      - "8444:8444"   # Admin API (HTTPS)
-    depends_on:
-      kong-database:
-        condition: service_healthy
-      kong-migration:
-        condition: service_completed_successfully
-    networks:
-      - aston-network
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 30s
-      timeout: 60s
-      retries: 10
-      start_period: 60s
-    restart: always
-
-  service-registrator:
-    image: aston-hibernate-service-registrator:latest
+  spring-gateway:
+    image: aston-hibernate-spring-gateway:lates
     build:
-      context: ./registrator
-    container_name: service-registrator
+      context: ./spring-gateway
+      dockerfile: Dockerfile
+    container_name: spring-gateway
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configuration-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    ports:
+      - 8000:8000
     depends_on:
-      kong:
+      eureka-server:
+        condition: service_healthy
+      configuration-server:
         condition: service_healthy
     networks:
       - aston-network
-    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Core application
+  # Services
   user-service:
     build:
       context: ./core-app
